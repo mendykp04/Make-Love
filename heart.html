@@ -8,7 +8,6 @@
   html, body { margin: 0; height: 100%; background: #0b0b0e; overflow: hidden; }
   canvas { display: block; cursor: pointer; }
   #hint {
-    display: none;
     position: fixed; left: 0; right: 0; bottom: 26px;
     text-align: center; pointer-events: none;
     font: 15px/1.4 system-ui, "Thonburi", sans-serif;
@@ -20,7 +19,7 @@
 </head>
 <body>
 <canvas id="c"></canvas>
-<div id="hint">แตะหน้าจอเพื่อเปิดเพลง ♪</div>
+<div id="hint">แตะหน้าจอ ♪</div>
 <script>
 const cv = document.getElementById('c');
 const ctx = cv.getContext('2d');
@@ -34,23 +33,9 @@ const COLORS = ['120,205,255', '165,160,255', '210,240,255']; // ฟ้า, ม�
 const SONG = 'song.mp3';   // ไฟล์เพลง (วางไว้โฟลเดอร์เดียวกับหน้านี้)
 // ----------------------------------------
 
-// เพลง: ลองเล่นทันทีที่เปิดหน้า ถ้าเบราว์เซอร์บล็อกเสียง ค่อยเริ่มตอนแตะหรือกดปุ่มครั้งแรก
+// เพลง: เริ่มพร้อมหัวใจตอนแตะครั้งแรก (ดูตรง start ด้านล่าง)
 const song = new Audio(SONG);
 song.loop = true;
-const hint = document.getElementById('hint');
-function startOnTouch() {
-  hint.style.display = 'block';
-  const go = () => {
-    song.play().then(() => {
-      hint.remove();
-      removeEventListener('pointerdown', go);
-      removeEventListener('keydown', go);
-    }).catch(() => {});
-  };
-  addEventListener('pointerdown', go);
-  addEventListener('keydown', go);
-}
-song.play().catch(startOnTouch);
 
 let W, H, S, cx, cy, dpr;
 function resize() {
@@ -171,8 +156,19 @@ function drawBase(t) {
   ctx.restore();
 }
 
-let t0 = performance.now();
-cv.addEventListener('click', () => { t0 = performance.now(); }); // คลิกเพื่อเล่นใหม่
+// ยังไม่แตะ = จอมืด ไม่มีเสียง พอแตะครั้งแรก หัวใจกับเพลงเริ่มพร้อมกัน
+let t0 = 0, started = false;
+function start() {
+  t0 = performance.now();
+  song.currentTime = 0;
+  song.play().catch(() => {});
+  if (started) return;   // แตะครั้งต่อไป = เล่นใหม่ตั้งแต่ต้นทั้งหัวใจและเพลง
+  started = true;
+  document.getElementById('hint').remove();
+  requestAnimationFrame(frame);
+}
+addEventListener('pointerdown', start);
+addEventListener('keydown', start);
 
 function frame(now) {
   const t = (now - t0) / 1000;
@@ -215,7 +211,6 @@ function frame(now) {
 
   requestAnimationFrame(frame);
 }
-requestAnimationFrame(frame);
 </script>
 </body>
 </html>
