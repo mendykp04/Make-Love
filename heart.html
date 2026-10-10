@@ -7,10 +7,25 @@
 <style>
   html, body { margin: 0; height: 100%; background: #0b0b0e; overflow: hidden; }
   canvas { display: block; cursor: pointer; }
+  #hint {
+    position: fixed; left: 0; right: 0; bottom: 26px;
+    text-align: center; pointer-events: none;
+    font: 15px/1.4 system-ui, "Thonburi", sans-serif;
+    color: rgba(210, 240, 255, .85);
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse { 50% { opacity: .35; } }
+  #player {
+    position: fixed; right: 12px; bottom: 12px;
+    width: 124px; height: 220px;
+    border: 0; border-radius: 12px;
+    background: #000; opacity: .9;
+  }
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
+<div id="hint">แตะหน้าจอเพื่อเปิดเพลง ♪</div>
 <script>
 const cv = document.getElementById('c');
 const ctx = cv.getContext('2d');
@@ -21,7 +36,21 @@ const SPARKS = 260;        // จำนวนประกายที่ลอ�
 const SPIN = 0.5;          // ความเร็วหมุน (เรเดียน/วินาที)
 const BASE_Y = -1.5;       // ตำแหน่งฐานแสง (หน่วยเดียวกับหัวใจ)
 const COLORS = ['120,205,255', '165,160,255', '210,240,255']; // ฟ้า, ม่วง, ขาวฟ้า
+const TIKTOK_ID = '7688644165286087956'; // คลิป TikTok ที่ใช้เป็นเพลง (เลขท้ายลิงก์คลิป)
 // ----------------------------------------
+
+// เพลง: เบราว์เซอร์ไม่ยอมให้เสียงดังเองตอนเปิดหน้า จึงเริ่มเล่นตอนแตะครั้งแรก
+// ใช้ตัวเล่นทางการของ TikTok ไม่ได้ก๊อปไฟล์เสียงมาเก็บไว้เอง
+function startMusic() {
+  const f = document.createElement('iframe');
+  f.id = 'player';
+  f.title = 'เพลงจาก TikTok';
+  f.allow = 'autoplay; encrypted-media';
+  f.src = `https://www.tiktok.com/player/v1/${TIKTOK_ID}?autoplay=1&loop=1&rel=0&description=0`;
+  document.body.appendChild(f);
+  document.getElementById('hint').remove();
+}
+addEventListener('pointerdown', startMusic, { once: true });
 
 let W, H, S, cx, cy, dpr;
 function resize() {
